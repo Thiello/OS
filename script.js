@@ -36,7 +36,10 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('input', () => {
         const itemAtual = capturarItemAtual();
         if (itemAtual) {
-            itens.push(itemAtual);
+            // Se o item atual já existe, o total será atualizado
+            if (!itens.includes(itemAtual)) {
+                itens.push(itemAtual); // Adiciona o item à lista apenas se for novo
+            }
         }
         calcularValorTotal();
     });
@@ -53,13 +56,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemAtual = capturarItemAtual();
 
         if (itemAtual) {
-            itens.push(itemAtual);  // Adiciona o item à lista
-            limparFormulario();  // Limpa o formulário
+            itens.push(itemAtual); // Adiciona o item à lista
+            limparFormulario(); // Limpa o formulário
         } else {
             alert('Por favor, preencha todos os campos corretamente antes de adicionar o item.');
         }
 
-        calcularValorTotal();  // Atualiza o valor total ao adicionar o item
+        calcularValorTotal(); // Atualiza o valor total ao adicionar o item
     });
 
     // Função para gerar o PDF
@@ -67,12 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
 
         const cliente = document.getElementById('cliente').value;
-        const total = document.getElementById('valor-total').textContent;
-
-        const itemAtual = capturarItemAtual();
-        if (itemAtual) {
-            itens.push(itemAtual);  // Adiciona o item atual à lista
-        }
+        const total = valorTotalElement.textContent;
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -82,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Carregar o template de fundo
         const img = new Image();
-        img.src = '/img/template.png';  // Caminho correto para o template do PDF
+        img.src = 'img/template.png';  // Caminho correto para o template do PDF
 
         img.onload = function () {
             // Adiciona a imagem de fundo
@@ -92,28 +90,21 @@ document.addEventListener('DOMContentLoaded', () => {
             doc.text(`${cliente}`, 35, 68.5); // Ajuste conforme necessário
 
             // Coordenadas específicas para cada item
-            const itemCoords = [
-                { xQuantidade: 23, yQuantidade: 82.5, xDescricao: 35, yDescricao: 82.5, xValorUnitario: 141.5, yValorUnitario: 82.5, xValorTotal: 164, yValorTotal: 82.5 },
-                { xQuantidade: 23, yQuantidade: 87, xDescricao: 35, yDescricao: 87, xValorUnitario: 141.5, yValorUnitario: 87, xValorTotal: 164, yValorTotal: 87 },
-                { xQuantidade: 23, yQuantidade: 91.5, xDescricao: 35, yDescricao: 91.5, xValorUnitario: 141.5, yValorUnitario: 91.5, xValorTotal: 164, yValorTotal: 91.5 },
-                { xQuantidade: 23, yQuantidade: 96, xDescricao: 35, yDescricao: 96, xValorUnitario: 141.5, yValorUnitario: 96, xValorTotal: 164, yValorTotal: 96 },
-                { xQuantidade: 23, yQuantidade: 100.5, xDescricao: 35, yDescricao: 100.5, xValorUnitario: 141.5, yValorUnitario: 100.5, xValorTotal: 164, yValorTotal: 100.5 }
-            ];
-
-            // Insere os itens no PDF
             itens.forEach((item, index) => {
-                if (index < itemCoords.length) { // Limita a cinco itens
-                    const totalPorItem = item.quantidade * item.valor;
-                    doc.text(`${item.quantidade}`, itemCoords[index].xQuantidade, itemCoords[index].yQuantidade);
-                    doc.text(`${item.descricao}`, itemCoords[index].xDescricao, itemCoords[index].yDescricao);
-                    doc.text(`R$ ${item.valor.toFixed(2)}`, itemCoords[index].xValorUnitario, itemCoords[index].yValorUnitario);
-                    doc.text(`R$ ${totalPorItem.toFixed(2)}`, itemCoords[index].xValorTotal, itemCoords[index].yValorTotal);
-                }
+                const y = 82.5 + (index * 5); // Incrementa a linha a cada item
+
+                // Exibe as informações do item no PDF
+                doc.text(item.quantidade.toString(), 23, y);
+                doc.text(item.descricao, 35, y);
+                doc.text(item.valor.toFixed(2), 141.5, y);
+                doc.text((item.quantidade * item.valor).toFixed(2), 164, y);
             });
 
-            // Exibe apenas o valor total
-            doc.text(`${total}`, 170, 172.5); // Ajuste a posição conforme necessário
-            doc.save('orcamento.pdf'); // Salva o PDF gerado
+            // Exibe o valor total
+            doc.text(`Total: ${total}`, 164, 100); // Ajuste conforme necessário
+
+            // Salva o PDF
+            doc.save('orcamento.pdf');
         };
     });
 });
