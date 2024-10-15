@@ -1,15 +1,28 @@
 document.addEventListener('DOMContentLoaded', () => {
     const addItemButton = document.getElementById('add-item');
     const valorTotalElement = document.getElementById('valor-total');
+    const itensContainer = document.getElementById('itens-container');
     let itens = [];
+
+    // Função para calcular o valor total
+    function calcularValorTotal() {
+        let total = 0;
+
+        // Soma os itens já adicionados
+        itens.forEach(item => {
+            total += item.quantidade * item.valor;
+        });
+
+        valorTotalElement.textContent = `R$ ${total.toFixed(2)}`; // Exibe o total formatado
+    }
 
     // Função para capturar os dados preenchidos no formulário
     function capturarItemAtual() {
-        const quantidade = parseInt(document.querySelector('.quantidade').value);
+        const quantidade = parseInt(document.querySelector('.quantidade').value) || 0;
         const descricao = document.querySelector('.descricao').value;
-        const valor = parseFloat(document.querySelector('.valor').value);
+        const valor = parseFloat(document.querySelector('.valor').value) || 0;
 
-        if (!isNaN(quantidade) && descricao && !isNaN(valor)) {
+        if (quantidade && descricao && valor) {
             return {
                 quantidade: quantidade,
                 descricao: descricao,
@@ -18,6 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return null;
     }
+
+    // Atualiza o valor total em tempo real ao modificar os campos
+    document.addEventListener('input', () => {
+        const itemAtual = capturarItemAtual();
+        if (itemAtual) {
+            itens.push(itemAtual);
+        }
+        calcularValorTotal();
+    });
 
     // Função para limpar os campos do formulário
     function limparFormulario() {
@@ -33,23 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (itemAtual) {
             itens.push(itemAtual);  // Adiciona o item à lista
             limparFormulario();  // Limpa o formulário
-            calcularValorTotal();  // Atualiza o valor total ao adicionar o item
         } else {
             alert('Por favor, preencha todos os campos corretamente antes de adicionar o item.');
         }
+
+        calcularValorTotal();  // Atualiza o valor total ao adicionar o item
     });
-
-    // Função para calcular o valor total
-    function calcularValorTotal() {
-        let total = 0;
-
-        // Soma os itens já adicionados
-        itens.forEach(item => {
-            total += item.quantidade * item.valor;
-        });
-
-        valorTotalElement.textContent = `R$ ${total.toFixed(2)}`; // Exibe o total formatado
-    }
 
     // Função para gerar o PDF
     document.getElementById('orcamento-form').addEventListener('submit', function(event) {
