@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const addItemButton = document.getElementById('add-item');
     const valorTotalElement = document.getElementById('valor-total');
     const itensContainer = document.getElementById('itens-container');
+    const clienteInput = document.getElementById('cliente');
     let itens = [];
 
     // Função para calcular o valor total
@@ -32,18 +33,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     }
 
-    // Atualiza o valor total em tempo real ao modificar os campos
-    document.addEventListener('input', () => {
-        const itemAtual = capturarItemAtual();
-        if (itemAtual) {
-            // Se o item atual já existe, o total será atualizado
-            if (!itens.includes(itemAtual)) {
-                itens.push(itemAtual); // Adiciona o item à lista apenas se for novo
-            }
-        }
-        calcularValorTotal();
-    });
-
     // Função para limpar os campos do formulário
     function limparFormulario() {
         document.querySelector('.quantidade').value = '';
@@ -57,20 +46,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (itemAtual) {
             itens.push(itemAtual); // Adiciona o item à lista
+            calcularValorTotal(); // Atualiza o valor total
             limparFormulario(); // Limpa o formulário
         } else {
             alert('Por favor, preencha todos os campos corretamente antes de adicionar o item.');
         }
-
-        calcularValorTotal(); // Atualiza o valor total ao adicionar o item
     });
 
     // Função para gerar o PDF
     document.getElementById('orcamento-form').addEventListener('submit', function(event) {
         event.preventDefault();
 
-        const cliente = document.getElementById('cliente').value;
-        const total = valorTotalElement.textContent;
+        const cliente = clienteInput.value;
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -101,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             // Exibe o valor total
-            doc.text(`Total: ${total}`, 164, 100); // Ajuste conforme necessário
+            doc.text(`Total: R$ ${valorTotalElement.textContent}`, 164, 100); // Ajuste conforme necessário
 
             // Salva o PDF
             doc.save('orcamento.pdf');
