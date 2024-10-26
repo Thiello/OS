@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Carregar o template de fundo
         const img = new Image();
-        img.src = '/img/template.png';  // Substitua pelo caminho da sua imagem
+        img.src = 'img/template.png';  // Substitua pelo caminho da sua imagem
 
         img.onload = function () {
             // Adiciona a imagem de fundo
