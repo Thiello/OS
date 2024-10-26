@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
 
-        doc.setFont('Arial'); // Define a fonte
+        doc.setFont('helvetica'); // Em vez de 'Arial'
         doc.setFontSize(10); // Define o tamanho da fonte
 
         // Carregar o template de fundo
