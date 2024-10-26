@@ -1,29 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
     const addItemButton = document.getElementById('add-item');
     const valorTotalElement = document.getElementById('valor-total');
-    const itensContainer = document.getElementById('itens-container');
-    const clienteInput = document.getElementById('cliente');
     let itens = [];
-
-    // Função para calcular o valor total
-    function calcularValorTotal() {
-        let total = 0;
-
-        // Soma os itens já adicionados
-        itens.forEach(item => {
-            total += item.quantidade * item.valor;
-        });
-
-        valorTotalElement.textContent = `R$ ${total.toFixed(2)}`; // Exibe o total formatado
-    }
 
     // Função para capturar os dados preenchidos no formulário
     function capturarItemAtual() {
-        const quantidade = parseInt(document.querySelector('.quantidade').value) || 0;
+        const quantidade = parseInt(document.querySelector('.quantidade').value);
         const descricao = document.querySelector('.descricao').value;
-        const valor = parseFloat(document.querySelector('.valor').value) || 0;
+        const valor = parseFloat(document.querySelector('.valor').value);
 
-        if (quantidade && descricao && valor) {
+        if (!isNaN(quantidade) && descricao && !isNaN(valor)) {
             return {
                 quantidade: quantidade,
                 descricao: descricao,
@@ -45,19 +31,43 @@ document.addEventListener('DOMContentLoaded', () => {
         const itemAtual = capturarItemAtual();
 
         if (itemAtual) {
-            itens.push(itemAtual); // Adiciona o item à lista
-            calcularValorTotal(); // Atualiza o valor total
-            limparFormulario(); // Limpa o formulário
+            itens.push(itemAtual);  // Adiciona o item à lista
+            limparFormulario();  // Limpa o formulário
+            calcularValorTotal();  // Atualiza o valor total
         } else {
             alert('Por favor, preencha todos os campos corretamente antes de adicionar o item.');
         }
     });
 
+    // Função para calcular o valor total
+    function calcularValorTotal() {
+        let total = 0;
+
+        // Soma os itens já adicionados
+        itens.forEach(item => {
+            total += item.quantidade * item.valor;
+        });
+
+        // Soma também o item atual, mesmo que ainda não tenha sido adicionado
+        const itemAtual = capturarItemAtual();
+        if (itemAtual) {
+            total += itemAtual.quantidade * itemAtual.valor;
+        }
+
+        valorTotalElement.textContent = `R$ ${total.toFixed(2)}`; // Exibe o total formatado
+    }
+
     // Função para gerar o PDF
     document.getElementById('orcamento-form').addEventListener('submit', function(event) {
         event.preventDefault();
 
-        const cliente = clienteInput.value;
+        const cliente = document.getElementById('cliente').value;
+        const total = document.getElementById('valor-total').textContent;
+
+        const itemAtual = capturarItemAtual();
+        if (itemAtual) {
+            itens.push(itemAtual);  // Adiciona o item atual à lista
+        }
 
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
@@ -67,31 +77,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Carregar o template de fundo
         const img = new Image();
-        img.src = 'img/template.png';  // Caminho correto para o template do PDF
+        img.src = '/img/template.png';  // Substitua pelo caminho da sua imagem
 
         img.onload = function () {
             // Adiciona a imagem de fundo
-            doc.addImage(img, 'PNG', 0, 0, 210, 297); // Ajuste conforme necessário
+            doc.addImage(img, '/fundo2.jpg', 0, 0, 210, 297); // Ajuste as dimensões e posição conforme necessário
 
             // Exibe o nome do cliente
-            doc.text(`${cliente}`, 35, 68.5); // Ajuste conforme necessário
+            doc.text(`${cliente}`, 35, 68.5); // Ajuste a posição conforme necessário
 
             // Coordenadas específicas para cada item
-            itens.forEach((item, index) => {
-                const y = 82.5 + (index * 5); // Incrementa a linha a cada item
+            const itemCoords = [
+                { xQuantidade: 23, yQuantidade: 82.5, xDescricao: 35, yDescricao: 82.5, xValorUnitario: 141.5, yValorUnitario: 82.5, xValorTotal: 164, yValorTotal: 82.5 },
+                { xQuantidade: 23, yQuantidade: 87, xDescricao: 35, yDescricao: 87, xValorUnitario: 141.5, yValorUnitario: 87, xValorTotal: 164, yValorTotal: 87 },
+                { xQuantidade: 23, yQuantidade: 91.5, xDescricao: 35, yDescricao: 91.5, xValorUnitario: 141.5, yValorUnitario: 91.5, xValorTotal: 164, yValorTotal: 91.5 },
+                { xQuantidade: 23, yQuantidade: 96, xDescricao: 35, yDescricao: 96, xValorUnitario: 141.5, yValorUnitario: 96, xValorTotal: 164, yValorTotal: 96 },
+                { xQuantidade: 23, yQuantidade: 100.5, xDescricao: 35, yDescricao: 100.5, xValorUnitario: 141.5, yValorUnitario: 100.5, xValorTotal: 164, yValorTotal: 100.5 }
+            ];
 
-                // Exibe as informações do item no PDF
-                doc.text(item.quantidade.toString(), 23, y);
-                doc.text(item.descricao, 35, y);
-                doc.text(item.valor.toFixed(2), 141.5, y);
-                doc.text((item.quantidade * item.valor).toFixed(2), 164, y);
+            // Insere os itens no PDF
+            itens.forEach((item, index) => {
+                if (index < itemCoords.length) { // Limita a cinco itens
+                    const totalPorItem = item.quantidade * item.valor; // Calcula o total por item
+                    doc.text(`${item.quantidade}`, itemCoords[index].xQuantidade, itemCoords[index].yQuantidade);
+                    doc.text(`${item.descricao}`, itemCoords[index].xDescricao, itemCoords[index].yDescricao);
+                    doc.text(`R$ ${item.valor.toFixed(2)}`, itemCoords[index].xValorUnitario, itemCoords[index].yValorUnitario); // Exibe o valor unitário
+                    doc.text(`R$ ${totalPorItem.toFixed(2)}`, itemCoords[index].xValorTotal, itemCoords[index].yValorTotal); // Exibe o total por item
+                }
             });
 
-            // Exibe o valor total
-            doc.text(`Total: R$ ${valorTotalElement.textContent}`, 164, 100); // Ajuste conforme necessário
-
-            // Salva o PDF
-            doc.save('orcamento.pdf');
+            // Exibe apenas o valor total
+            doc.text(`${total}`, 170, 172.5); // Ajuste a posição conforme necessário
+            doc.save('orcamento.pdf'); // Salva o PDF gerado
         };
     });
+
+    // Atualiza o valor total em tempo real conforme os campos forem modificados
+    document.querySelector('.quantidade').addEventListener('input', calcularValorTotal);
+    document.querySelector('.descricao').addEventListener('input', calcularValorTotal);
+    document.querySelector('.valor').addEventListener('input', calcularValorTotal);
 });
